@@ -77,7 +77,26 @@ func main() {
 			log.Fatalf("Error building deny policy: %v", errors)
 		}
 
-		fmt.Printf("Policy Version %s", string(policyJSON))
+		// ---------------------------------------------------------
+		// HERE WE RE-ORDER THE POLICY BASED ON KEY VALUES PROVIDED
+		// ---------------------------------------------------------
+		var doc ipfilter.Policy
+		err := json.Unmarshal(policyJSON, &doc)
+		if err != nil {
+			log.Fatalf("Failed to unmarshal policy JSON: %v", err)
+		}
+
+		// Policy Document UnMarshalled ReOrdered based on Key Value provided
+		kvs := []ipfilter.KV{
+			{Key: "Version", Value: doc.Version},
+			{Key: "Id", Value: doc.Id},
+			{Key: "Statement", Value: doc.Statement},
+		}
+
+		reorderdJson, err := ipfilter.ReorderJson(kvs, false)
+		if err != nil {
+			log.Fatalf("Unexpected error: %v", err)
+		}
 
 		var final []byte
 
@@ -89,15 +108,13 @@ func main() {
 		if *minify {
 			final = policyJSON
 		} else {
-			var prettyJSON interface{}
-			err := json.Unmarshal(policyJSON, &prettyJSON)
+			var prettyJSON any
+			err := json.Unmarshal(reorderdJson, &prettyJSON)
 			if err != nil {
 				log.Fatalf("Error during JSON pretty print: %v", err)
 			}
-			final, err = json.MarshalIndent(prettyJSON, "", "  ")
-			if err != nil {
-				log.Fatalf("Error during JSON pretty print: %v", err)
-			}
+
+			final = reorderdJson
 		}
 
 		// ---------------------------------------------------------

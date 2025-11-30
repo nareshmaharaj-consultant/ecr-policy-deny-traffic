@@ -373,9 +373,88 @@ func TestBuildDenyPolicy(t *testing.T) {
 
 }
 
-type KV struct {
-	Key   string
-	Value interface{}
+// Test Document Structure
+type TestDoc struct {
+	FieldOne   string       `json:"FieldOne"`
+	FieldTwo   string       `json:"FieldTwo"`
+	FieldThree []FieldThree `json:"FieldThree"`
+}
+
+type FieldThree struct {
+	SubFieldA string `json:"SubFieldA"`
+	SubFieldB int    `json:"SubFieldB"`
+}
+
+// BuildTestDoc creates a sample TestDoc and returns its JSON representation.
+func BuildTestDoc() []byte {
+	doc := TestDoc{
+		FieldOne: "ValueOne",
+		FieldTwo: "ValueTwo",
+		FieldThree: []FieldThree{
+			{SubFieldA: "SubValueA1", SubFieldB: 1},
+			{SubFieldA: "SubValueA2", SubFieldB: 2},
+		},
+	}
+
+	jsonBytes, _ := json.Marshal(doc)
+	return jsonBytes
+}
+
+// Test to build TestDoc and reorder JSON elements based on Key Value provided
+func TestBuildTestDocAndReorderJsonElements(t *testing.T) {
+	jsonBytes := BuildTestDoc()
+
+	var doc TestDoc
+	err := json.Unmarshal(jsonBytes, &doc)
+	if err != nil {
+		t.Fatalf("Failed to unmarshal test doc JSON: %v", err)
+	}
+
+	if doc.FieldOne != "ValueOne" {
+		t.Errorf("Expected FieldOne to be 'ValueOne', but got '%s'", doc.FieldOne)
+	}
+
+	if doc.FieldTwo != "ValueTwo" {
+		t.Errorf("Expected FieldTwo to be 'ValueTwo', but got '%s'", doc.FieldTwo)
+	}
+
+	if len(doc.FieldThree) != 2 {
+		t.Fatalf("Expected 2 entries in FieldThree, but got %d", len(doc.FieldThree))
+	}
+
+	expectedSubFields := []FieldThree{
+		{SubFieldA: "SubValueA1", SubFieldB: 1},
+		{SubFieldA: "SubValueA2", SubFieldB: 2},
+	}
+
+	for i, subField := range doc.FieldThree {
+		if subField != expectedSubFields[i] {
+			t.Errorf("Expected FieldThree[%d] to be %+v, but got %+v", i, expectedSubFields[i], subField)
+		}
+	}
+
+	want := `{"FieldOne":"ValueOne","FieldTwo":"ValueTwo","FieldThree":[{"SubFieldA":"SubValueA1","SubFieldB":1},{"SubFieldA":"SubValueA2","SubFieldB":2}]}`
+	if string(jsonBytes) != want {
+		t.Errorf("Test doc JSON does not match expected structure.\nGot: %s\nWant: %s", string(jsonBytes), want)
+	}
+
+	// ReOrdered JSON based on Key Value provided
+	kvs := []KV{
+		{"FieldTwo", doc.FieldTwo},
+		{"FieldOne", doc.FieldOne},
+		{"FieldThree", doc.FieldThree},
+	}
+
+	jsonBytes, err = ReorderJson(kvs, true)
+	if err != nil {
+		t.Fatalf("Unexpected error: %v", err)
+	}
+
+	wantReordered := `{"FieldTwo":"ValueTwo","FieldOne":"ValueOne","FieldThree":[{"SubFieldA":"SubValueA1","SubFieldB":1},{"SubFieldA":"SubValueA2","SubFieldB":2}]}`
+	if string(jsonBytes) != wantReordered {
+		t.Errorf("ReOrdered test doc JSON does not match expected structure.\nGot: %s\nWant: %s", string(jsonBytes), wantReordered)
+	}
+
 }
 
 func TestReOrderingJsonDocumentBasedOnKeyValueProvided(t *testing.T) {
@@ -402,7 +481,7 @@ func TestReOrderingJsonDocumentBasedOnKeyValueProvided(t *testing.T) {
 		{"Statement", doc.Statement},
 	}
 
-	reorderdJson, err := reorderJson(kvs)
+	reorderdJson, err := ReorderJson(kvs, false)
 	if err != nil {
 		t.Fatalf("Unexpected error: %v", err)
 	}
