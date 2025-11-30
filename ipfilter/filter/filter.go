@@ -91,7 +91,12 @@ func BuildDenyPolicy(ips []string) ([]byte, error) {
 	return json.Marshal(policy)
 }
 
-func reorderJson(kvs []KV) ([]byte, error) {
+type KV struct {
+	Key   string
+	Value any
+}
+
+func ReorderJson(kvs []KV, minify bool) ([]byte, error) {
 	buf := bytes.NewBufferString("{\n")
 	enc := json.NewEncoder(buf)
 	enc.SetIndent("", "  ")
@@ -107,5 +112,16 @@ func reorderJson(kvs []KV) ([]byte, error) {
 		}
 	}
 	buf.WriteString("}")
-	return buf.Bytes(), nil
+
+	// If not minifying, we’re done
+	if !minify {
+		return buf.Bytes(), nil
+	}
+
+	// MINIFY STEP
+	var compact bytes.Buffer
+	if err := json.Compact(&compact, buf.Bytes()); err != nil {
+		return nil, err
+	}
+	return compact.Bytes(), nil
 }
