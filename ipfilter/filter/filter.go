@@ -1,7 +1,9 @@
 package ipfilter
 
 import (
+	"bytes"
 	"encoding/json"
+	"fmt"
 	"net"
 )
 
@@ -87,4 +89,23 @@ func BuildDenyPolicy(ips []string) ([]byte, error) {
 		},
 	}
 	return json.Marshal(policy)
+}
+
+func reorderJson(kvs []KV) ([]byte, error) {
+	buf := bytes.NewBufferString("{\n")
+	enc := json.NewEncoder(buf)
+	enc.SetIndent("", "  ")
+
+	for i, kv := range kvs {
+		fmt.Fprintf(buf, "  %q: ", kv.Key)
+		b, _ := json.MarshalIndent(kv.Value, "  ", "  ")
+		buf.Write(b)
+		if i < len(kvs)-1 {
+			buf.WriteString(",\n")
+		} else {
+			buf.WriteString("\n")
+		}
+	}
+	buf.WriteString("}")
+	return buf.Bytes(), nil
 }

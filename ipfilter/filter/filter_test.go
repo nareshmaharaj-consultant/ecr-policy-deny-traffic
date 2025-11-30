@@ -372,3 +372,61 @@ func TestBuildDenyPolicy(t *testing.T) {
 	}
 
 }
+
+type KV struct {
+	Key   string
+	Value interface{}
+}
+
+func TestReOrderingJsonDocumentBasedOnKeyValueProvided(t *testing.T) {
+	ips := []string{
+		"140.82.112.0/20",
+		"143.55.64.0/20",
+	}
+
+	policyBytes, err := BuildDenyPolicy(ips)
+	if err != nil {
+		t.Fatalf("Unexpected error: %v", err)
+	}
+
+	var doc Policy
+	err = json.Unmarshal(policyBytes, &doc)
+	if err != nil {
+		t.Fatalf("Failed to unmarshal policy JSON: %v", err)
+	}
+
+	// Policy Document UnMarshalled ReOrdered based on Key Value provided
+	kvs := []KV{
+		{"Version", doc.Version},
+		{"Id", doc.Id},
+		{"Statement", doc.Statement},
+	}
+
+	reorderdJson, err := reorderJson(kvs)
+	if err != nil {
+		t.Fatalf("Unexpected error: %v", err)
+	}
+
+	var reorderDoc Policy
+	err = json.Unmarshal(reorderdJson, &reorderDoc)
+	if err != nil {
+		t.Fatalf("Failed to unmarshal policy JSON: %v", err)
+	}
+
+	if reorderDoc.Version != "2012-10-17" {
+		t.Fatalf("wrong version: %s", reorderDoc.Version)
+	}
+
+	if len(reorderDoc.Statement) != 1 {
+		t.Fatalf("Expected 1 statement in policy, but got %d", len(reorderDoc.Statement))
+	}
+
+	statement := reorderDoc.Statement[0]
+	if statement.Effect != "Deny" {
+		t.Errorf("Expected Effect to be 'Deny', but got '%s'", statement.Effect)
+	}
+
+	if len(statement.Condition.NotIpAddress.SourceIPs) != len(ips) {
+		t.Fatalf("CIDR length mismatch")
+	}
+}
