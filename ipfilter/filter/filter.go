@@ -67,7 +67,6 @@ type NotIpAddress struct {
 }
 
 // BuildDenyPolicy constructs a deny policy JSON document for the given list of IPs.
-
 func BuildDenyPolicy(ips []string) ([]byte, error) {
 	policy := Policy{
 		Version: "2012-10-17",
