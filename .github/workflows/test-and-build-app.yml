@@ -62,4 +62,4 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: ipfilter-bin
-        path: ipfilter-bin
+        path: ./app/ipfilter-bin
