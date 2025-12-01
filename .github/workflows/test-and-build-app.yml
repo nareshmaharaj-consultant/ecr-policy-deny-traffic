@@ -32,6 +32,14 @@ jobs:
     - name: Run tests
       run: go test -v -race -coverprofile=coverage.out ./...
     
+    - name: Upload coverage
+      uses: codecov/codecov-action@v5
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        files: ./coverage.out
+        flags: unittests
+        name: codecov-umbrella
+    
   build:
     needs: test
     runs-on: ubuntu-latest
