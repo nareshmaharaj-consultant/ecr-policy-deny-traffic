@@ -56,7 +56,7 @@ jobs:
       run: go mod download
     
     - name: Build
-      run: go build -v -o app/ipfilter-bin ./cmd/ipfilter.go
+      run: go build -v -o app/ipfilter-bin ./ipfilter/cmd/ipfilter.go
     
     - name: Upload artifact
       uses: actions/upload-artifact@v4
