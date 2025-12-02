@@ -32,7 +32,10 @@ jobs:
             go get github.com/aws/aws-lambda-go/lambda
     
     - name: Run tests
-      run: go test -v -race -coverprofile=coverage.out ./...
+      run: |
+            go mod download
+            go get github.com/aws/aws-lambda-go/lambda
+            go test -v -race -coverprofile=coverage.out ./...
     
     - name: Upload coverage
       uses: codecov/codecov-action@v5
