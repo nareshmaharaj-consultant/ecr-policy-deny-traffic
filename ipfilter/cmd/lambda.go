@@ -97,6 +97,6 @@ func handler(ctx context.Context, in Input) (json.RawMessage, error) {
 	return pretty.Bytes(), nil
 }
 
-func main() {
+func mainX() {
 	lambda.Start(handler)
 }

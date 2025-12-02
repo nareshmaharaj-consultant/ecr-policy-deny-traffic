@@ -22,7 +22,7 @@ var (
 // This main() is only used when building the CLI tool.
 // Remove the 'X' from 'mainX' to enable it.
 // ---------------------------------------------------------
-func Xmain() {
+func main() {
 
 	startTime := time.Now()
 
