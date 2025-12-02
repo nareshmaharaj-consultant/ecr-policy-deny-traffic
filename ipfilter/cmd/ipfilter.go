@@ -4,10 +4,8 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"io"
 	ipfilter "ipfilter/ipfilter/filter"
 	"log"
-	"net/http"
 	"os"
 	"time"
 )
@@ -16,6 +14,14 @@ var (
 	version = "1.0.0"
 )
 
+// Main function
+// ---------------------------------------------------------
+// ENTRY POINT FOR COMMAND LINE TOOL
+// NOTE: This is separate from the Lambda handler in lambda.go
+// SO we have two main() functions in the project.
+// This main() is only used when building the CLI tool.
+// Remove the 'X' from 'mainX' to enable it.
+// ---------------------------------------------------------
 func main() {
 
 	startTime := time.Now()
@@ -56,7 +62,7 @@ func main() {
 		// JSON document listing all GitHub public IP ranges, broken down by service.
 		// The TDD tests have already validated that our extractors handle this shape.
 		// ---------------------------------------------------------
-		rawData, errors = fetchURL(githubMetaURL)
+		rawData, errors = ipfilter.FetchURL(githubMetaURL)
 		if errors != nil {
 			log.Fatalf("Error fetching GitHub metadata: %v", errors)
 		}
@@ -108,12 +114,11 @@ func main() {
 		if *minify {
 			final = policyJSON
 		} else {
-			var prettyJSON any
-			err := json.Unmarshal(reorderdJson, &prettyJSON)
-			if err != nil {
-				log.Fatalf("Error during JSON pretty print: %v", err)
-			}
-
+			//	var prettyJSON any
+			//	err := json.Unmarshal(reorderdJson, &prettyJSON)
+			//	if err != nil {
+			//		log.Fatalf("Error during JSON pretty print: %v", err)
+			//	}
 			final = reorderdJson
 		}
 
@@ -137,18 +142,4 @@ func main() {
 		println("Unsupported source provider:", *source)
 	}
 
-}
-
-func fetchURL(githubMetaURL string) ([]byte, error) {
-	resp, err := http.Get(githubMetaURL)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
-	return body, nil
 }
