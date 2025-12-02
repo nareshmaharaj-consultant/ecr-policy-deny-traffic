@@ -72,7 +72,7 @@ type NotIpAddress struct {
 func BuildDenyPolicy(ips []string) ([]byte, error) {
 	policy := Policy{
 		Version: "2012-10-17",
-		Id:      "GitHubActionsDenyPolicy",
+		Id:      "GitHubActionsDenyPolicy1",
 		Statement: []Statement{
 			{
 				Sid:       "DenyNonGitHubActionsIPs",
